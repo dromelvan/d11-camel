@@ -28,6 +28,7 @@ public class D11CamelRouteBuilder extends RouteBuilder {
     public void configure() {        
         // Wait for a request to update match datetimes appears on the ActiveMQ queue.
         from("activemq:queue:" + this.activeMQProperties.getUpdateMatchDatetimesRequestQueue())
+            .routeId("PollUpdateMatchDatetimesRequestsRoute")
             // The http component seems to assume we want to POST the message from the activemq component.
             // We have to set the method to GET since we're only using ActiveMQ to trigger this route.
             .setHeader("CamelHttpMethod", constant("GET"))
@@ -41,6 +42,7 @@ public class D11CamelRouteBuilder extends RouteBuilder {
         
         // Wait for a match id to appear on the update match datetimes queue.         
         from("activemq:queue:" + this.activeMQProperties.getUpdateMatchDatetimesQueue())
+            .routeId("DownloadUpdateMatchDatetimesRoute")
             // Throttle the route to avoid triggering Whoscored flood protection.
             .throttle(1).timePeriodMillis(10000)
             // Get the match from the D11 api, construct the destination file path from its properties and set the Whoscored match url as body.
