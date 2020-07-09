@@ -52,8 +52,9 @@ public class D11CamelRouteBuilder extends RouteBuilder {
                 @Override
                 public void process(Exchange exchange) throws Exception {
                     Match match = exchange.getMessage().getBody(MatchResponse.class).getMatch();
-                    String fileDestination = String.format("download/whoscored/%s/%d", match.getSeasonName(), match.getMatchDayNumber());
-                    exchange.setProperty("fileDestination", fileDestination);     
+                    String destinationDirectory = String.format(whoscoredProperties.getMatchDestinationDirectoryDatetimes(), match.getSeasonName(), match.getMatchDayNumber());
+                    exchange.setProperty("destinationDirectory", destinationDirectory);
+                    exchange.setProperty("tempDirectory", whoscoredProperties.getMatchTempDirectory());
                     exchange.getIn().setBody(whoscoredProperties.getMatchUrl().replace(":id", match.getWhoscoredId()));
                 }                
             })            
@@ -65,13 +66,12 @@ public class D11CamelRouteBuilder extends RouteBuilder {
                 @Override
                 public void process(Exchange exchange) throws Exception {
                     Document document = Jsoup.parse(exchange.getMessage().getBody(String.class));
-                    String fileDestination = exchange.getProperty("fileDestination", String.class);
-                    fileDestination += String.format("?fileName=%s.html", document.title().replace("/", "-"));
-                    exchange.setProperty("fileDestination", fileDestination);
+                    String fileName = String.format("%s.html", document.title().replace("/", "-"));
+                    exchange.setProperty("fileName", fileName);
                 }                
             })
-            .log("Writing file ${exchangeProperty.fileDestination}")
-            .toD("file://${exchangeProperty.fileDestination}&tempPrefix=/../../../temp/");
+            .log("Writing file ${exchangeProperty.destinationDirectory}/${exchangeProperty.fileName}")
+            .toD("file://${exchangeProperty.destinationDirectory}?fileName=${exchangeProperty.fileName}&tempPrefix=${exchangeProperty.tempDirectory}");
     }
  
 }

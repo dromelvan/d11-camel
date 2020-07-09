@@ -12,5 +12,7 @@ import lombok.Data;
 public class WhoscoredProperties {
 
     private String matchUrl;
+    private String matchTempDirectory;
+    private String matchDestinationDirectoryDatetimes;
     
 }
