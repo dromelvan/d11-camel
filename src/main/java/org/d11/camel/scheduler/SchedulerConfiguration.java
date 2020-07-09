@@ -1,6 +1,6 @@
 package org.d11.camel.scheduler;
 
-import org.d11.camel.properties.ActiveMQProperties;
+import org.d11.camel.properties.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.core.JmsTemplate;
@@ -21,8 +21,8 @@ public class SchedulerConfiguration {
     
     @Scheduled(cron = "0,15,30,45 * * * * ?")
     public void testSchedule() {
-        //this.jmsTemplate.convertAndSend(this.activeMQProperties.getUpdateMatchDatetimesRequestQueue(), MatchDayEndpoint.CURRENT);
-        this.jmsTemplate.convertAndSend(this.activeMQProperties.getUpdateMatchDatetimesRequestQueue(), "559");
+        this.jmsTemplate.convertAndSend(this.activeMQProperties.getUpdateMatchDatetimesRequestQueue(), MatchDayEndpoint.CURRENT);
+        //this.jmsTemplate.convertAndSend(this.activeMQProperties.getUpdateMatchDatetimesRequestQueue(), "559");
     }
     
 }
