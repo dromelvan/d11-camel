@@ -71,7 +71,7 @@ public class D11CamelRouteBuilder extends RouteBuilder {
                 }                
             })
             .log("Writing file ${exchangeProperty.fileDestination}")
-            .toD("file://${exchangeProperty.fileDestination}");        
+            .toD("file://${exchangeProperty.fileDestination}&tempPrefix=/../../../temp/");
     }
  
 }
