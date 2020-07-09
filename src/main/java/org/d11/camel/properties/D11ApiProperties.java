@@ -18,7 +18,7 @@ public class D11ApiProperties {
     private String url;
     
     private SeasonEndpoint currentSeason;
-    private MatchDayEndpoint currentMatchDay;
+    private MatchDayEndpoint matchDay;
     private MatchEndpoint match;
  
     public String getBaseUrl() {

@@ -32,9 +32,9 @@ public class D11CamelRouteBuilder extends RouteBuilder {
             // The http component seems to assume we want to POST the message from the activemq component.
             // We have to set the method to GET since we're only using ActiveMQ to trigger this route.
             .setHeader("CamelHttpMethod", constant("GET"))
-            .to("http://" + this.d11ApiProperties.getBaseUrl() + this.d11ApiProperties.getCurrentMatchDay().getEndpoint())
+            .toD("http://" + this.d11ApiProperties.getBaseUrl() + this.d11ApiProperties.getMatchDay().getEndpoint().replace(":id", "${body}"))
             // Get the match id list from the match day and split it.            
-            .split(jsonpath(this.d11ApiProperties.getCurrentMatchDay().getMatchIdsJsonPath()))
+            .split(jsonpath(this.d11ApiProperties.getMatchDay().getMatchIdsJsonPath()))
                 .convertBodyTo(String.class)
                 // Put each match id on the update match datetimes queue.
                 .to(("activemq:queue:" + this.activeMQProperties.getUpdateMatchDatetimesQueue()));
