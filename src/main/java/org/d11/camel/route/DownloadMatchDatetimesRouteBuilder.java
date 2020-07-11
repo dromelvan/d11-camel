@@ -33,6 +33,7 @@ public class DownloadMatchDatetimesRouteBuilder extends RouteBuilder {
             .throttle(1).timePeriodMillis(10000)
             // Get the match from the D11 api, construct the destination file path from its properties and set the Whoscored match url as body.
             .doTry()
+                .setProperty("matchId", simple("${body}"))
                 .toD("http://" + this.d11ApiProperties.getBaseUrl() + this.d11ApiProperties.getMatch().getEndpoint().replace(":id", "${body}"))
                 .unmarshal().json(JsonLibrary.Jackson, MatchResponse.class)
                 .process(new Processor() {
@@ -53,7 +54,7 @@ public class DownloadMatchDatetimesRouteBuilder extends RouteBuilder {
                     @Override
                     public void process(Exchange exchange) throws Exception {
                         Document document = Jsoup.parse(exchange.getMessage().getBody(String.class));
-                        String fileName = String.format("%s.html", document.title().replace("/", "-"));
+                        String fileName = String.format("%s %s.html", exchange.getProperty("matchId"), document.title().replace("/", "-"));
                         exchange.setProperty("fileName", fileName);
                     }                
                 })
