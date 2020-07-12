@@ -7,13 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UpdateMatchDatetimesRouteBuilder extends RouteBuilder {
+public class DownloadMatchDayRouteBuilder extends RouteBuilder {
 
     private ActiveMQProperties activeMQProperties;
     private D11ApiProperties d11ApiProperties;
     
     @Autowired
-    public UpdateMatchDatetimesRouteBuilder(ActiveMQProperties activeMQProperties, D11ApiProperties d11ApiProperties) {
+    public DownloadMatchDayRouteBuilder(ActiveMQProperties activeMQProperties, D11ApiProperties d11ApiProperties) {
         this.activeMQProperties = activeMQProperties;
         this.d11ApiProperties = d11ApiProperties;    
     }
@@ -21,8 +21,8 @@ public class UpdateMatchDatetimesRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         // Wait for a match day id (or 'current'/'upcoming) to appear on the ActiveMQ queue.
-        from("activemq:queue:" + this.activeMQProperties.getUpdateMatchDatetimesRequestQueue())
-            .routeId("PollUpdateMatchDatetimesRequestsRoute")
+        from("activemq:queue:" + this.activeMQProperties.getDownloadMatchDayQueue())
+            .routeId("DownloadMatchDayRoute")
             // The http component seems to assume we want to POST the message from the activemq component.
             // We have to set the method to GET.
             .setHeader("CamelHttpMethod", constant("GET"))
@@ -39,7 +39,7 @@ public class UpdateMatchDatetimesRouteBuilder extends RouteBuilder {
                 .split(jsonpath(this.d11ApiProperties.getMatchDay().getMatchIdsJsonPath()))
                     .convertBodyTo(String.class)
                     // Put each match id on the update match datetimes queue.
-                    .to("activemq:queue:" + this.activeMQProperties.getUpdateMatchDatetimesQueue())
+                    .to("activemq:queue:" + this.activeMQProperties.getDownloadMatchQueue())
                 .end();            
     }
 

@@ -13,6 +13,6 @@ public class WhoscoredProperties {
 
     private String matchUrl;
     private String matchTempDirectory;
-    private String matchDestinationDirectoryDatetimes;
+    private String matchDestinationDirectory;
     
 }

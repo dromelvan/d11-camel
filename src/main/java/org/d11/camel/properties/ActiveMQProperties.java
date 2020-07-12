@@ -11,7 +11,7 @@ import lombok.Data;
 @ConfigurationProperties(prefix = "d11.activemq.queue")
 public class ActiveMQProperties {
 
-    private String updateMatchDatetimesRequestQueue;
-    private String updateMatchDatetimesQueue;
-
+    private String downloadMatchDayQueue;
+    private String downloadMatchQueue;
+    
 }

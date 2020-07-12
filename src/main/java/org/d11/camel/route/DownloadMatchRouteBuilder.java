@@ -11,14 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DownloadMatchDatetimesRouteBuilder extends RouteBuilder {
+public class DownloadMatchRouteBuilder extends RouteBuilder {
         
     private ActiveMQProperties activeMQProperties;
     private D11ApiProperties d11ApiProperties;
     private WhoscoredProperties whoscoredProperties;
     
     @Autowired
-    public DownloadMatchDatetimesRouteBuilder(ActiveMQProperties activeMQProperties, D11ApiProperties d11ApiProperties, WhoscoredProperties whoscoredProperties) {
+    public DownloadMatchRouteBuilder(ActiveMQProperties activeMQProperties, D11ApiProperties d11ApiProperties, WhoscoredProperties whoscoredProperties) {
         this.activeMQProperties = activeMQProperties;
         this.d11ApiProperties = d11ApiProperties;    
         this.whoscoredProperties = whoscoredProperties;        
@@ -27,11 +27,11 @@ public class DownloadMatchDatetimesRouteBuilder extends RouteBuilder {
     @Override
     public void configure() {                            
         // Wait for a match id to appear on the update match datetimes queue.         
-        from("activemq:queue:" + this.activeMQProperties.getUpdateMatchDatetimesQueue())
-            .routeId("DownloadUpdateMatchDatetimesRoute")
+        from("activemq:queue:" + this.activeMQProperties.getDownloadMatchQueue())
+            .routeId("DownloadMatchRoute")
             // Throttle the route to avoid triggering Whoscored flood protection.
             .throttle(1).timePeriodMillis(10000)
-            // Get the match from the D11 api, construct the destination file path from its properties and set the Whoscored match url as body.
+            // Get the match from the D11 api and set the Whoscored match url as body.
             .doTry()
                 .setProperty("matchId", simple("${body}"))
                 .toD("http://" + this.d11ApiProperties.getBaseUrl() + this.d11ApiProperties.getMatch().getEndpoint().replace(":id", "${body}"))
@@ -40,9 +40,6 @@ public class DownloadMatchDatetimesRouteBuilder extends RouteBuilder {
                     @Override
                     public void process(Exchange exchange) throws Exception {
                         Match match = exchange.getMessage().getBody(MatchResponse.class).getMatch();
-                        String destinationDirectory = String.format(whoscoredProperties.getMatchDestinationDirectoryDatetimes(), match.getSeasonName(), match.getMatchDayNumber());
-                        exchange.setProperty("destinationDirectory", destinationDirectory);
-                        exchange.setProperty("tempDirectory", whoscoredProperties.getMatchTempDirectory());
                         exchange.getIn().setBody(whoscoredProperties.getMatchUrl().replace(":id", match.getWhoscoredId()));
                     }                
                 })            
@@ -54,12 +51,12 @@ public class DownloadMatchDatetimesRouteBuilder extends RouteBuilder {
                     @Override
                     public void process(Exchange exchange) throws Exception {
                         Document document = Jsoup.parse(exchange.getMessage().getBody(String.class));
-                        String fileName = String.format("%s %s.html", exchange.getProperty("matchId"), document.title().replace("/", "-"));
+                        String fileName = String.format("%s %s.html", exchange.getProperty("matchId"), document.title().replace("/", "-"));                        
                         exchange.setProperty("fileName", fileName);
                     }                
                 })
-                .log("Writing file ${exchangeProperty.destinationDirectory}/${exchangeProperty.fileName}")
-                .toD("file://${exchangeProperty.destinationDirectory}?fileName=${exchangeProperty.fileName}&tempPrefix=${exchangeProperty.tempDirectory}")
+                .log("Writing file " + whoscoredProperties.getMatchDestinationDirectory() + "/${exchangeProperty.fileName}")
+                .toD("file://" + whoscoredProperties.getMatchDestinationDirectory() + "?fileName=${exchangeProperty.fileName}&tempPrefix=" + whoscoredProperties.getMatchTempDirectory())
             .doCatch(Exception.class)
                 .setBody(exceptionMessage())
                 .log("Could not download match file: ${body}")

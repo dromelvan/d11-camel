@@ -21,7 +21,7 @@ public class SchedulerConfiguration {
     
     @Scheduled(cron = "0,15,30,45 * * * * ?")
     public void testSchedule() {
-        this.jmsTemplate.convertAndSend(this.activeMQProperties.getUpdateMatchDatetimesRequestQueue(), MatchDayEndpoint.CURRENT);
+        this.jmsTemplate.convertAndSend(this.activeMQProperties.getDownloadMatchDayQueue(), MatchDayEndpoint.CURRENT);
         //this.jmsTemplate.convertAndSend(this.activeMQProperties.getUpdateMatchDatetimesRequestQueue(), "559");
     }
     
