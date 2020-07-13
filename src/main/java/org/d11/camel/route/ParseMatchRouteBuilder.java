@@ -27,6 +27,7 @@ public class ParseMatchRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         from("file://" + this.whoscoredProperties.getMatchDownloadDirectory() + "?recursive=true&delete=true")
+            .routeId("ParseMatchRoute")
             .log("Parsing file ${body.fileName}")
             .to("file://" + this.whoscoredProperties.getMatchDataDirectory())
             .process(new Processor() {
@@ -43,7 +44,7 @@ public class ParseMatchRouteBuilder extends RouteBuilder {
                         match.setId(matchId);
                         match.setSeasonName(seasonName);
                         match.setMatchDayNumber(matchDayNumber);
-                        exchange.getMessage().setBody(match);                        
+                        exchange.getMessage().setBody(match);   
                     }
                 }                
             })
