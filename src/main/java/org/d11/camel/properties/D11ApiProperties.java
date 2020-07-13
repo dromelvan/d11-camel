@@ -17,9 +17,10 @@ public class D11ApiProperties {
     
     private String url;
     
+    private D11RestEndpoint login;
     private SeasonEndpoint currentSeason;
     private MatchDayEndpoint matchDay;
-    private MatchEndpoint match;
+    private D11RestEndpoint match;
  
     public String getBaseUrl() {
         return String.format(getUrl(), getHost(), getPort(), getVersion(), "");
