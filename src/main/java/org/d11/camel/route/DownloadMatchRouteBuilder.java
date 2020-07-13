@@ -31,7 +31,7 @@ public class DownloadMatchRouteBuilder extends RouteBuilder {
             .routeId("DownloadMatchRoute")
             // Throttle the route to avoid triggering Whoscored flood protection.
             .throttle(1).timePeriodMillis(10000)
-            // Get the match from the D11 api and set the Whoscored match url as body.
+            // Get the match from the D11 api, construct the download file path from its properties and set the Whoscored match url as body.
             .doTry()
                 .setProperty("matchId", simple("${body}"))
                 .toD("http://" + this.d11ApiProperties.getBaseUrl() + this.d11ApiProperties.getMatch().getEndpoint().replace(":id", "${body}"))
@@ -40,6 +40,9 @@ public class DownloadMatchRouteBuilder extends RouteBuilder {
                     @Override
                     public void process(Exchange exchange) throws Exception {
                         Match match = exchange.getMessage().getBody(MatchResponse.class).getMatch();
+                        String destinationDirectory = String.format(whoscoredProperties.getMatchDownloadDirectory() + "/%s/%s", match.getSeasonName(), match.getMatchDayNumber());
+                        exchange.setProperty("destinationDirectory", destinationDirectory);
+                        exchange.setProperty("tempDirectory", whoscoredProperties.getMatchTempDirectory());
                         exchange.getIn().setBody(whoscoredProperties.getMatchUrl().replace(":id", match.getWhoscoredId()));
                     }                
                 })            
@@ -51,12 +54,12 @@ public class DownloadMatchRouteBuilder extends RouteBuilder {
                     @Override
                     public void process(Exchange exchange) throws Exception {
                         Document document = Jsoup.parse(exchange.getMessage().getBody(String.class));
-                        String fileName = String.format("%s %s.html", exchange.getProperty("matchId"), document.title().replace("/", "-"));                        
+                        String fileName = String.format("%s %s.html", exchange.getProperty("matchId"), document.title().replace("/", "-"));
                         exchange.setProperty("fileName", fileName);
                     }                
                 })
-                .log("Writing file " + whoscoredProperties.getMatchDestinationDirectory() + "/${exchangeProperty.fileName}")
-                .toD("file://" + whoscoredProperties.getMatchDestinationDirectory() + "?fileName=${exchangeProperty.fileName}&tempPrefix=" + whoscoredProperties.getMatchTempDirectory())
+                .log("Writing file ${exchangeProperty.destinationDirectory}/${exchangeProperty.fileName}")
+                .toD("file://${exchangeProperty.destinationDirectory}?fileName=${exchangeProperty.fileName}&tempPrefix=${exchangeProperty.tempDirectory}")
             .doCatch(Exception.class)
                 .setBody(exceptionMessage())
                 .log("Could not download match file: ${body}")
