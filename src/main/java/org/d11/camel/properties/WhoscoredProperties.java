@@ -15,5 +15,6 @@ public class WhoscoredProperties {
     private String matchTempDirectory;
     private String matchDownloadDirectory;
     private String matchDataDirectory;
+    private String parsedMatchDataDirectory;
     
 }

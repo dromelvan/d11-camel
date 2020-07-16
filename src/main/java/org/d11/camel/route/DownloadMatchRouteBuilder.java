@@ -3,8 +3,8 @@ package org.d11.camel.route;
 import org.apache.camel.*;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
+import org.d11.api.model.*;
 import org.d11.camel.properties.*;
-import org.d11.camel.rest.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +43,7 @@ public class DownloadMatchRouteBuilder extends RouteBuilder {
                         String destinationDirectory = String.format(whoscoredProperties.getMatchDownloadDirectory() + "/%s/%s", match.getSeasonName(), match.getMatchDayNumber());
                         exchange.setProperty("destinationDirectory", destinationDirectory);
                         exchange.setProperty("tempDirectory", whoscoredProperties.getMatchTempDirectory());
-                        exchange.getIn().setBody(whoscoredProperties.getMatchUrl().replace(":id", match.getWhoscoredId()));
+                        exchange.getIn().setBody(whoscoredProperties.getMatchUrl().replace(":id", String.valueOf(match.getWhoScoredId())));
                     }                
                 })            
                 // Download the file with a Selenium downloader and move it to the destination directory.

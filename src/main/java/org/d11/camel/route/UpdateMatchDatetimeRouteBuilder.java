@@ -18,6 +18,10 @@ public class UpdateMatchDatetimeRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         from("direct:update-match-datetime")
+            .routeId("UpdateMatchdatetimeRoute")
+            .to("direct:login")
+            .log("${exchangeProperty.authenticationToken}")
+            .log("${body}")
             .log("TODO: Update match datetime route.");
     }
 

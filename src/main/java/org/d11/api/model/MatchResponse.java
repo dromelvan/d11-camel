@@ -1,4 +1,4 @@
-package org.d11.camel.rest;
+package org.d11.api.model;
 
 import lombok.Data;
 

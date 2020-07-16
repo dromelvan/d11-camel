@@ -3,9 +3,9 @@ package org.d11.camel.route;
 import org.apache.camel.*;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
+import org.d11.api.model.LoginResponse;
 import org.d11.camel.event.LoginFailedEvent;
 import org.d11.camel.properties.*;
-import org.d11.camel.rest.LoginResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -27,6 +27,7 @@ public class LoginRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         from("direct:login")
+            .routeId("LoginRoute")
             .doTry()
                 .setProperty("pre-login-body", simple("${body}"))
                 .toD("http://" + this.d11ApiProperties.getBaseUrl() + this.d11ApiProperties.getLogin().getEndpoint()

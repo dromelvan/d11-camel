@@ -7,9 +7,9 @@ import org.apache.camel.*;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.file.GenericFile;
 import org.apache.camel.model.dataformat.JsonLibrary;
+import org.d11.api.model.Match;
 import org.d11.camel.parser.WhoScoredMatchParser;
 import org.d11.camel.properties.WhoscoredProperties;
-import org.d11.camel.rest.Match;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -49,7 +49,7 @@ public class ParseMatchRouteBuilder extends RouteBuilder {
                 }                
             })
             .choice()
-                .when(simple("${body} !is 'org.d11.camel.rest.Match'"))
+                .when(simple("${body} !is '" + Match.class.getName() + "'"))
                     // If we end up here, the filename regex didn't match which means the filename was invalid.
                     .log("Invalid filename ${body.fileName}.")
                     .stop()
@@ -62,9 +62,9 @@ public class ParseMatchRouteBuilder extends RouteBuilder {
                     .log("Updating match stats for match ${body.id}.")
                     .to("direct:update-match-stats")
             .end()
-            .setProperty("fileName", simple("${body.seasonName}/${body.matchDayNumber}/${body.id}"))
+            .setProperty("fileName", simple("${body.seasonName}/${body.matchDayNumber}/${body.homeTeam.name} vs ${body.awayTeam.name} (${body.elapsed})"))
             .marshal().json(JsonLibrary.Jackson, Match.class, true)
-            .to("file://data/d11/matches?fileName=${exchangeProperty.fileName}.json");
+            .to("file://" + this.whoscoredProperties.getParsedMatchDataDirectory() + "?fileName=${exchangeProperty.fileName}.json");
     }
 
 }

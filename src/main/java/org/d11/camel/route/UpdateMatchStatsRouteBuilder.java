@@ -18,6 +18,9 @@ public class UpdateMatchStatsRouteBuilder extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         from("direct:update-match-stats")
+            .routeId("UpdateMatchStatsRoute")
+            .to("direct:login")
+            .log("${exchangeProperty.authenticationToken}")
             .log("TODO: Update match stats route.");
     }
 
