@@ -9,12 +9,13 @@ import lombok.Data;
 @Configuration
 @PropertySource("classpath:whoscored.properties")
 @ConfigurationProperties(prefix = "whoscored")
-public class WhoscoredProperties {
+public class WhoScoredProperties {
 
     private String matchUrl;
     private String matchTempDirectory;
     private String matchDownloadDirectory;
     private String matchDataDirectory;
+    private String matchUploadDirectory;    
     private String parsedMatchDataDirectory;
     
 }

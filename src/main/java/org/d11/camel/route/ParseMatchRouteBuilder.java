@@ -9,7 +9,7 @@ import org.apache.camel.component.file.GenericFile;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.d11.api.model.Match;
 import org.d11.camel.parser.WhoScoredMatchParser;
-import org.d11.camel.properties.WhoscoredProperties;
+import org.d11.camel.properties.WhoScoredProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -17,54 +17,44 @@ import org.springframework.stereotype.Component;
 public class ParseMatchRouteBuilder extends RouteBuilder {
 
     private final static Pattern matchFileNamePattern = Pattern.compile("(\\d{4}-\\d{4})/(\\d{2})/(\\d{4}).*");
-    private WhoscoredProperties whoscoredProperties;
+    private WhoScoredProperties whoScoredProperties;
     
     @Autowired
-    public ParseMatchRouteBuilder(WhoscoredProperties whoscoredProperties) {
-        this.whoscoredProperties = whoscoredProperties;
+    public ParseMatchRouteBuilder(WhoScoredProperties whoScoredProperties) {
+        this.whoScoredProperties = whoScoredProperties;
     }
     
     @Override
-    public void configure() throws Exception {
-        from("file://" + this.whoscoredProperties.getMatchDownloadDirectory() + "?recursive=true&delete=true")
-            .routeId("ParseMatchRoute")
-            .log("Parsing file ${body.fileName}")
-            .to("file://" + this.whoscoredProperties.getMatchDataDirectory())
-            .process(new Processor() {
-                @Override
-                public void process(Exchange exchange) throws Exception {
-                    // In the new API we'll update match datetime with whoscoredId but until then we'll need to keep the D11 matchId in the file name.
-                    Matcher matcher = matchFileNamePattern.matcher(exchange.getMessage().getBody(GenericFile.class).getFileName());
-                    if(matcher.matches()) {
-                        String seasonName = matcher.group(1);
-                        int matchDayNumber = Integer.parseInt(matcher.group(2));
-                        int matchId = Integer.parseInt(matcher.group(3));
-                        
-                        Match match = new WhoScoredMatchParser().parse(exchange.getMessage().getBody(String.class));
-                        match.setId(matchId);
-                        match.setSeasonName(seasonName);
-                        match.setMatchDayNumber(matchDayNumber);
-                        exchange.getMessage().setBody(match);   
+    public void configure() throws Exception {    
+        from("file://" + this.whoScoredProperties.getMatchDownloadDirectory() + "?recursive=true&delete=true")
+        .routeId("ParseMatchRoute")
+        .log("Parsing file ${body.fileName}")
+        .to("file://" + this.whoScoredProperties.getMatchDataDirectory())
+        .process(new Processor() {
+            @Override
+            public void process(Exchange exchange) throws Exception {
+                // In the new API we'll update match datetime with whoscoredId but until then we'll need to keep the D11 matchId in the file name.
+                Matcher matcher = matchFileNamePattern.matcher(exchange.getMessage().getBody(GenericFile.class).getFileName());
+                if(matcher.matches()) {
+                    String seasonName = matcher.group(1);
+                    int matchDayNumber = Integer.parseInt(matcher.group(2));
+                    int matchId = Integer.parseInt(matcher.group(3));
+                    
+                    Match match = new WhoScoredMatchParser().parse(exchange.getMessage().getBody(String.class));
+                    match.setId(matchId);
+                    match.setSeasonName(seasonName);
+                    match.setMatchDayNumber(matchDayNumber);
+                    if(match.getDatetime() == null) {
+                        // This will postpone the match.
+                        match.setDatetime("");
                     }
-                }                
-            })
-            .choice()
-                .when(simple("${body} !is '" + Match.class.getName() + "'"))
-                    // If we end up here, the filename regex didn't match which means the filename was invalid.
-                    .log("Invalid filename ${body.fileName}.")
-                    .stop()
-                .when(simple("${body.status} == 0"))
-                    // The match is still pending so we'll update datetime only.
-                    .log("Updating datetime for match ${body.id}")
-                    .to("direct:update-match-datetime")
-                .otherwise()
-                    // The match is active or finished so we'll update match stats.
-                    .log("Updating match stats for match ${body.id}.")
-                    .to("direct:update-match-stats")
-            .end()
-            .setProperty("fileName", simple("${body.seasonName}/${body.matchDayNumber}/${body.homeTeam.name} vs ${body.awayTeam.name} (${body.elapsed})"))
-            .marshal().json(JsonLibrary.Jackson, Match.class, true)
-            .to("file://" + this.whoscoredProperties.getParsedMatchDataDirectory() + "?fileName=${exchangeProperty.fileName}.json");
+                    exchange.getMessage().setBody(match);   
+                }
+            }                
+        })
+        .setProperty("fileName", simple("${body.seasonName}/${body.matchDayNumber}/${body.homeTeam.name} vs ${body.awayTeam.name} (${body.elapsed})"))
+        .marshal().json(JsonLibrary.Jackson, Match.class, true)
+        .to("file://" + this.whoScoredProperties.getMatchUploadDirectory() + "?fileName=${exchangeProperty.fileName}.json");
     }
-
+    
 }

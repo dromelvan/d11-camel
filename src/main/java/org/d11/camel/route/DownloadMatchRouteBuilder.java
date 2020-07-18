@@ -15,13 +15,13 @@ public class DownloadMatchRouteBuilder extends RouteBuilder {
         
     private ActiveMQProperties activeMQProperties;
     private D11ApiProperties d11ApiProperties;
-    private WhoscoredProperties whoscoredProperties;
+    private WhoScoredProperties whoScoredProperties;
     
     @Autowired
-    public DownloadMatchRouteBuilder(ActiveMQProperties activeMQProperties, D11ApiProperties d11ApiProperties, WhoscoredProperties whoscoredProperties) {
+    public DownloadMatchRouteBuilder(ActiveMQProperties activeMQProperties, D11ApiProperties d11ApiProperties, WhoScoredProperties whoScoredProperties) {
         this.activeMQProperties = activeMQProperties;
         this.d11ApiProperties = d11ApiProperties;    
-        this.whoscoredProperties = whoscoredProperties;        
+        this.whoScoredProperties = whoScoredProperties;        
     }
     
     @Override
@@ -40,10 +40,10 @@ public class DownloadMatchRouteBuilder extends RouteBuilder {
                     @Override
                     public void process(Exchange exchange) throws Exception {
                         Match match = exchange.getMessage().getBody(MatchResponse.class).getMatch();
-                        String destinationDirectory = String.format(whoscoredProperties.getMatchDownloadDirectory() + "/%s/%s", match.getSeasonName(), match.getMatchDayNumber());
+                        String destinationDirectory = String.format(whoScoredProperties.getMatchDownloadDirectory() + "/%s/%s", match.getSeasonName(), match.getMatchDayNumber());
                         exchange.setProperty("destinationDirectory", destinationDirectory);
-                        exchange.setProperty("tempDirectory", whoscoredProperties.getMatchTempDirectory());
-                        exchange.getIn().setBody(whoscoredProperties.getMatchUrl().replace(":id", String.valueOf(match.getWhoScoredId())));
+                        exchange.setProperty("tempDirectory", whoScoredProperties.getMatchTempDirectory());
+                        exchange.getIn().setBody(whoScoredProperties.getMatchUrl().replace(":id", String.valueOf(match.getWhoScoredId())));
                     }                
                 })            
                 // Download the file with a Selenium downloader and move it to the destination directory.
