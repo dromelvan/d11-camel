@@ -1,5 +1,6 @@
 package org.d11.camel.route;
 
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.d11.camel.properties.D11ApiProperties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +21,7 @@ public class UpdateMatchStatsRouteBuilder extends RouteBuilder {
         from("direct:update-match-stats")
             .routeId("UpdateMatchStatsRoute")
             .to("direct:login")
-            .log("${exchangeProperty.authenticationToken}")
-            .log("TODO: Update match stats route.");
+            .log(LoggingLevel.INFO, "TODO: Update match stats route.");
     }
 
 }

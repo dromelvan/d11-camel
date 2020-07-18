@@ -33,6 +33,7 @@ public class DownloadMatchRouteBuilder extends RouteBuilder {
             .throttle(1).timePeriodMillis(10000)
             // Get the match from the D11 api, construct the download file path from its properties and set the Whoscored match url as body.
             .doTry()
+                .log(LoggingLevel.INFO, "Downloading match ${body}.")
                 .setProperty("matchId", simple("${body}"))
                 .toD("http://" + this.d11ApiProperties.getBaseUrl() + this.d11ApiProperties.getMatch().getEndpoint().replace(":id", "${body}"))
                 .unmarshal().json(JsonLibrary.Jackson, MatchResponse.class)
@@ -47,7 +48,7 @@ public class DownloadMatchRouteBuilder extends RouteBuilder {
                     }                
                 })            
                 // Download the file with a Selenium downloader and move it to the destination directory.
-                .log("Downloading ${body}")
+                .log(LoggingLevel.DEBUG, "Downloading url ${body}.")
                 .toD("selenium:${body}")
                 // Use Jsoup to set the filename to the title of the html document.
                 .process(new Processor() {
@@ -58,11 +59,11 @@ public class DownloadMatchRouteBuilder extends RouteBuilder {
                         exchange.setProperty("fileName", fileName);
                     }                
                 })
-                .log("Writing file ${exchangeProperty.destinationDirectory}/${exchangeProperty.fileName}")
+                .log(LoggingLevel.DEBUG, "Writing file ${exchangeProperty.destinationDirectory}/${exchangeProperty.fileName}.")
                 .toD("file://${exchangeProperty.destinationDirectory}?fileName=${exchangeProperty.fileName}&tempPrefix=${exchangeProperty.tempDirectory}")
             .doCatch(Exception.class)
                 .setBody(exceptionMessage())
-                .log("Could not download match file: ${body}")
+                .log(LoggingLevel.ERROR, "Could not download match ${exchangeProperty.matchId}: ${body}")
             .end();
     }
  

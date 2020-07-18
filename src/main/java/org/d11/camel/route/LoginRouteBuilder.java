@@ -29,6 +29,7 @@ public class LoginRouteBuilder extends RouteBuilder {
         from("direct:login")
             .routeId("LoginRoute")
             .doTry()
+                .log(LoggingLevel.DEBUG, "Logging in to the D11 Api.")
                 .setProperty("pre-login-body", simple("${body}"))
                 .toD("http://" + this.d11ApiProperties.getBaseUrl() + this.d11ApiProperties.getLogin().getEndpoint()
                                                                                .replace(":user", this.keyProperties.getD11ApiUser())
@@ -36,9 +37,9 @@ public class LoginRouteBuilder extends RouteBuilder {
                 .unmarshal().json(JsonLibrary.Jackson, LoginResponse.class)
                 .setProperty("authenticationToken", simple("${body.authenticationToken}"))
                 .setBody(simple("${exchangeProperty.pre-login-body}"))
-                .log("Login successful.")
+                .log(LoggingLevel.DEBUG, "D11 Api login successful.")
             .doCatch(Exception.class)
-                .log("Login failed.")
+                .log(LoggingLevel.ERROR, "D11 Api login failed.")
                 .process(new Processor() {
                     @Override
                     public void process(Exchange exchange) throws Exception {

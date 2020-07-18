@@ -1,5 +1,6 @@
 package org.d11.camel.route;
 
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.d11.camel.properties.*;
@@ -29,10 +30,12 @@ public class DownloadMatchDayRouteBuilder extends RouteBuilder {
             .doTry()
                 // Get the requested match day from the api.
                 .unmarshal().json(JsonLibrary.Jackson)
+                .setProperty("matchDayId", simple("${body}"))
+                .log(LoggingLevel.INFO, "Downloading match day ${exchangeProperty.matchDayId}.")
                 .toD("http://" + this.d11ApiProperties.getBaseUrl() + this.d11ApiProperties.getMatchDay().getEndpoint().replace(":id", "${body}"))
             .doCatch(Exception.class)
                 .setBody(exceptionMessage())
-                .log("Could not find match day: ${body}")
+                .log(LoggingLevel.ERROR, "Could not find match day ${exchangeProperty.matchDayId}: ${body}")
                 .stop()
             .end()
                 // Get the match id list from the match day and split it.            

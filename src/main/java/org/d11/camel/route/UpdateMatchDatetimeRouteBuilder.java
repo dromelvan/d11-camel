@@ -1,5 +1,6 @@
 package org.d11.camel.route;
 
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.d11.api.model.MatchResponse;
@@ -29,6 +30,7 @@ public class UpdateMatchDatetimeRouteBuilder extends RouteBuilder {
             .setProperty("matchId", jsonpath(this.d11ApiProperties.getMatch().getIdJsonPath()))
             .setProperty("datetime", jsonpath(this.d11ApiProperties.getMatch().getDatetimeJsonPath()))
             .to("file://" + this.whoScoredProperties.getParsedMatchDataDirectory())
+            .log(LoggingLevel.INFO, "Updating datetime for match ${exchangeProperty.matchId}.")
             .setHeader("CamelHttpMethod", constant("PUT"))
             .toD("http://" + this.d11ApiProperties.getBaseUrl() + this.d11ApiProperties.getMatchDateTime().getEndpoint()
                     .replace(":id", "${exchangeProperty.matchId}")
@@ -38,9 +40,9 @@ public class UpdateMatchDatetimeRouteBuilder extends RouteBuilder {
             .unmarshal().json(JsonLibrary.Jackson, MatchResponse.class, true)
             .choice()
                 .when().simple("${body.match.datetime} == '" + this.d11ApiProperties.getPostponedDatetime() + "'")
-                    .log("Postponed match ${body.match.id}")
+                    .log(LoggingLevel.INFO, "Postponed match ${body.match.id}")
                 .otherwise()
-                    .log("Moved match ${body.match.id} to ${body.match.datetime}")
+                    .log(LoggingLevel.INFO, "Moved match ${body.match.id} to ${body.match.datetime}")
             .end();            
     }
 

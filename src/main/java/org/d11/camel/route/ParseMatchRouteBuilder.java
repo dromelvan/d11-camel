@@ -28,7 +28,7 @@ public class ParseMatchRouteBuilder extends RouteBuilder {
     public void configure() throws Exception {    
         from("file://" + this.whoScoredProperties.getMatchDownloadDirectory() + "?recursive=true&delete=true")
         .routeId("ParseMatchRoute")
-        .log("Parsing file ${body.fileName}")
+        .log(LoggingLevel.DEBUG, "Parsing file ${body.fileName}.")
         .to("file://" + this.whoScoredProperties.getMatchDataDirectory())
         .process(new Processor() {
             @Override
