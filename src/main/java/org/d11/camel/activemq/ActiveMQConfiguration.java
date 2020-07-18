@@ -1,11 +1,20 @@
 package org.d11.camel.activemq;
 
+import org.apache.activemq.broker.BrokerService;
+import org.slf4j.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.support.converter.*;
 
 @Configuration
 public class ActiveMQConfiguration {
 
+    // Value from application.properties
+    @Value("${spring.activemq.broker-url}")
+    private String brokerUrl;
+    private Logger logger = LoggerFactory.getLogger(ActiveMQConfiguration.class);
+    
     /**
      * Use a Jackson converter to convert messages.
      * 
@@ -17,6 +26,24 @@ public class ActiveMQConfiguration {
         converter.setTargetType(MessageType.TEXT);
         converter.setTypeIdPropertyName("_type");
         return converter;
+    }
+
+    /**
+     * Listen for messages from external sources.
+     * 
+     * @return BrokerService with a connector for external sources to add messages to the embedded ActiveMz
+     * @throws Exception
+     */
+    @Bean
+    public BrokerService broker() throws Exception {
+        BrokerService broker = new BrokerService();
+        broker.addConnector(this.brokerUrl);
+        return broker;
+    }
+
+    @JmsListener(destination = "testQueue")
+    public void listen(String message) {
+        logger.info("TestQueue message: {}.", message);
     }
     
 }
