@@ -36,9 +36,12 @@ public class ActiveMQConfiguration {
      */
     @Bean
     public BrokerService broker() throws Exception {
-        BrokerService broker = new BrokerService();
-        broker.addConnector(this.brokerUrl);
-        return broker;
+        BrokerService brokerService = new BrokerService();
+        brokerService.addConnector(this.brokerUrl);
+        // For this application we gain little by having persistence in the broker except for problems
+        // when we manage to put something bad on the queue.
+        brokerService.setPersistent(false);
+        return brokerService;
     }
 
     @JmsListener(destination = "testQueue")
