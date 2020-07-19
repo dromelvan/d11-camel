@@ -31,10 +31,14 @@ public class DownloadMatchRouteBuilder extends RouteBuilder {
             .routeId("DownloadMatchRoute")
             // Throttle the route to avoid triggering Whoscored flood protection.
             .throttle(1).timePeriodMillis(10000)
-            // Get the match from the D11 api, construct the download file path from its properties and set the Whoscored match url as body.
+            // The http component seems to assume we want to POST the message from the activemq component.
+            // We have to set the method to GET.
+            .setHeader("CamelHttpMethod", constant("GET"))            
             .doTry()
-                .log(LoggingLevel.INFO, "Downloading match ${body}.")
+                .unmarshal().json(JsonLibrary.Jackson)
                 .setProperty("matchId", simple("${body}"))
+                .log(LoggingLevel.INFO, "Downloading match ${exchangeProperty.matchId}.")
+                // Get the match from the D11 api, construct the download file path from its properties and set the Whoscored match url as body.                
                 .toD("http://" + this.d11ApiProperties.getBaseUrl() + this.d11ApiProperties.getMatch().getEndpoint().replace(":id", "${body}"))
                 .unmarshal().json(JsonLibrary.Jackson, MatchResponse.class)
                 .process(new Processor() {
